@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body, #root { height: 100%; }
+  body {
+    @apply bg-ink-950 text-zinc-100 antialiased;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+  input, textarea, select, button { font: inherit; }
+  * { -webkit-tap-highlight-color: transparent; }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl
+           bg-amber-glow text-ink-950 font-semibold text-sm
+           hover:opacity-90 active:scale-[0.98] transition shadow-glow-sm;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl
+           bg-ink-800 text-zinc-100 text-sm font-medium
+           hover:bg-ink-700 active:scale-[0.98] transition border border-white/5;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg
+           text-zinc-400 text-sm hover:text-zinc-100 hover:bg-ink-800 transition;
+  }
+  .input {
+    @apply w-full px-3 py-2.5 rounded-lg bg-ink-800 border border-white/5
+           text-zinc-100 placeholder-zinc-500 text-sm
+           focus:outline-none focus:border-amber-glow/40 transition;
+  }
+  .card {
+    @apply bg-ink-900/70 border border-white/5 rounded-2xl;
+  }
+  .shimmer {
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+    background-size: 1000px 100%;
+    @apply rounded-xl bg-ink-800/50;
+  }
+  .num { font-variant-numeric: tabular-nums; }
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.16); }
