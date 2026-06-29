@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import QRCodeLib from "qrcode";
 
 interface QRCodeProps {
   value: string;
@@ -6,48 +7,50 @@ interface QRCodeProps {
   className?: string;
 }
 
-// 免依赖的 QR 码组件,调用公开 API(api.qrserver.com)
+// 纯前端生成 QR 码(不依赖任何外部 API,国内访问无障碍)
 export function QRCode({ value, size = 200, className = "" }: QRCodeProps) {
-  const [loading, setLoading] = useState(true);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [err, setErr] = useState(false);
-  const url = err
-    ? ""
-    : `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(
-        value
-      )}&margin=10&bgcolor=ffffff&color=18181b`;
+
+  useEffect(() => {
+    if (!canvasRef.current) return;
+    setErr(false);
+    QRCodeLib.toCanvas(canvasRef.current, value, {
+      width: size,
+      margin: 2,
+      errorCorrectionLevel: "M",
+      color: {
+        dark: "#18181b",
+        light: "#ffffff",
+      },
+    }).catch((e) => {
+      console.error("[QRCode] 生成失败", e);
+      setErr(true);
+    });
+  }, [value, size]);
+
+  if (err) {
+    return (
+      <div
+        className={`bg-white rounded-lg p-2 inline-flex items-center justify-center text-zinc-500 text-xs ${className}`}
+        style={{ width: size + 16, height: size + 16 }}
+      >
+        二维码生成失败
+      </div>
+    );
+  }
+
   return (
     <div
-      className={`relative bg-white rounded-lg p-2 inline-block ${className}`}
+      className={`bg-white rounded-lg p-2 inline-block ${className}`}
       style={{ width: size + 16, height: size + 16 }}
     >
-      {err ? (
-        <div
-          className="flex items-center justify-center text-zinc-500 text-xs"
-          style={{ width: size, height: size }}
-        >
-          二维码生成失败
-        </div>
-      ) : (
-        <>
-          {loading && (
-            <div
-              className="absolute inset-0 flex items-center justify-center text-zinc-400 text-xs"
-              style={{ width: size + 16, height: size + 16 }}
-            >
-              生成中...
-            </div>
-          )}
-          <img
-            src={url}
-            alt={value}
-            width={size}
-            height={size}
-            className={loading ? "opacity-0" : "opacity-100 transition-opacity"}
-            onLoad={() => setLoading(false)}
-            onError={() => setErr(true)}
-          />
-        </>
-      )}
+      <canvas
+        ref={canvasRef}
+        width={size}
+        height={size}
+        style={{ display: "block" }}
+      />
     </div>
   );
 }
