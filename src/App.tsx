@@ -24,8 +24,10 @@ function Protected({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  const init = useAuthStore((s) => s.init);
-  useEffect(() => { init(); }, [init]);
+  // 用 getState() 直接拿 init 引用,避免 selector 模式的类型推断问题
+  useEffect(() => {
+    useAuthStore.getState().init();
+  }, []);
 
   return (
     <BrowserRouter>
