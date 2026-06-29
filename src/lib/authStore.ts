@@ -12,7 +12,8 @@ interface AuthState {
   logout: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+// zustand v4.4+ 推荐用 curried 形式 create<T>()(initializer),获得完整类型推断
+export const useAuthStore = create<AuthState>()((set) => ({
   session: null,
   user: null,
   loading: true,
@@ -35,7 +36,6 @@ export const useAuthStore = create<AuthState>((set) => ({
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return { error: error.message };
     if (data.session) {
-      // 持久化到 localStorage,iOS PWA 唤醒后能立即拿到 user_id
       try {
         localStorage.setItem("ups.session", JSON.stringify({
           access_token: data.session.access_token,
