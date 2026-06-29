@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Smartphone, Eye, EyeOff, LogIn, UserPlus } from "lucide-react";
+import { Smartphone, Eye, EyeOff, LogIn, UserPlus, Mail, AlertCircle } from "lucide-react";
 import { useAuthStore } from "../lib/authStore";
-import { isOfflineMode } from "../lib/supabase";
+import { isOfflineMode, supabase } from "../lib/supabase";
 
 export function Login() {
   const navigate = useNavigate();
@@ -13,25 +13,59 @@ export function Login() {
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
+  const [resendLoading, setResendLoading] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setErr(null);
+    setInfo(null);
     setLoading(true);
     try {
       const fn = mode === "signin" ? signIn : signUp;
       const r = await fn(email.trim(), password);
       if (r.error) {
         setErr(r.error);
-      } else {
-        navigate("/used-phones");
+        return;
       }
+      if (mode === "signup") {
+        // 注册成功,但 Supabase 默认要求邮箱验证(无 session = 未确认)
+        // 让用户明确知道要去收邮件
+        setInfo("注册成功!请到邮箱点确认链接完成验证,然后回来登录。如果没看到邮件,看下垃圾箱。");
+        return;
+      }
+      navigate("/used-phones");
     } catch (e: any) {
       setErr(e?.message || "操作失败");
     } finally {
       setLoading(false);
     }
   }
+
+  async function resendConfirmation() {
+    if (!email.trim()) {
+      setErr("请先填写邮箱");
+      return;
+    }
+    setResendLoading(true);
+    setErr(null);
+    setInfo(null);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: email.trim(),
+      });
+      if (error) {
+        setErr("重发失败:" + error.message);
+      } else {
+        setInfo("已重新发送确认邮件,请到邮箱查收(可能要在垃圾箱里找)。");
+      }
+    } finally {
+      setResendLoading(false);
+    }
+  }
+
+  const showResend = err && /email not confirmed|未确认|not verified/i.test(err);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 py-12 bg-gradient-to-b from-ink-950 to-ink-900">
@@ -83,7 +117,31 @@ export function Login() {
           </div>
         </div>
 
-        {err && <p className="text-xs text-status-cancelled">{err}</p>}
+        {err && (
+          <div className="p-3 rounded-lg bg-status-cancelled/10 border border-status-cancelled/30 text-xs text-status-cancelled flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+            <div className="flex-1">
+              <p>{err}</p>
+              {showResend && (
+                <button
+                  type="button"
+                  onClick={resendConfirmation}
+                  disabled={resendLoading}
+                  className="mt-2 underline hover:no-underline inline-flex items-center gap-1"
+                >
+                  <Mail className="w-3 h-3" /> {resendLoading ? "发送中..." : "重新发送确认邮件"}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {info && (
+          <div className="p-3 rounded-lg bg-status-completed/10 border border-status-completed/30 text-xs text-status-completed flex items-start gap-2">
+            <Mail className="w-4 h-4 mt-0.5 shrink-0" />
+            <p>{info}</p>
+          </div>
+        )}
 
         <button type="submit" className="btn-primary w-full" disabled={loading}>
           {mode === "signin" ? <LogIn className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
@@ -92,7 +150,7 @@ export function Login() {
 
         <button
           type="button"
-          onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setErr(null); }}
+          onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setErr(null); setInfo(null); }}
           className="w-full text-xs text-zinc-400 hover:text-zinc-200"
         >
           {mode === "signin" ? "还没账号?去注册" : "已有账号?去登录"}
