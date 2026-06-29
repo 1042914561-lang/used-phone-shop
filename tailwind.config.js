@@ -20,6 +20,16 @@ export default {
           cancelled: "#e74c3c",
         },
       },
+      backgroundImage: {
+        "amber-gradient": "linear-gradient(135deg, #f5a623 0%, #ff8a00 100%)",
+      },
+      boxShadow: {
+        "glow-sm": "0 0 12px -2px rgba(245,166,35,0.4)",
+        glow: "0 0 24px -4px rgba(245,166,35,0.5), 0 0 8px rgba(245,166,35,0.3)",
+      },
+      fontSize: {
+        "2xs": ["10px", "14px"],
+      },
       fontFamily: {
         sans: ['-apple-system','BlinkMacSystemFont','PingFang SC','Hiragino Sans GB','Microsoft YaHei','sans-serif'],
       },
